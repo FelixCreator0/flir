@@ -45,7 +45,7 @@ def Warp_RegType : WarpIR_Type<"RegType", "reg"> {
   );
 
   let assemblyFormat = [{
-    `<` `[` $shape `]` `,` $elementType `,` $layout `>`
+    `<` `[` $shape `]` `,` $pointeeType `,` $layout `>`
   }];
 }
 

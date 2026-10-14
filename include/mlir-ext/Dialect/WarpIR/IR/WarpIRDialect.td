@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef TILE_IR_DIALECT
-#define TILE_IR_DIALECT
+#ifndef WARP_IR_DIALECT
+#define WARP_IR_DIALECT
 
 include "mlir/IR/OpBase.td"
 

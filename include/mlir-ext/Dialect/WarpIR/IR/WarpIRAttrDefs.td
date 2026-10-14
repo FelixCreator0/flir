@@ -41,9 +41,9 @@ def Warp_DistributionAttr :
   let parameters = (
     ins
       "int64_t":$warpSize,
-      "ArrayRef<int64_t>":$threadsPerDim,
-      "ArrayRef<int64_t>":$elementsPerThread,
-      "ArrayRef<int64_t>":$order
+      ArrayRefParameter<"int64_t">:$threadsPerDim,
+      ArrayRefParameter<"int64_t">:$elementsPerThread,
+      ArrayRefParameter<"int64_t">:$order
   );
 
   let assemblyFormat = [{

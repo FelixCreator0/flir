@@ -12,13 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef TRITON_DIALECT_TILE_IR_DIALECT_H
-#define TRITON_DIALECT_TILE_IR_DIALECT_H
+#ifndef TRITON_DIALECT_WARP_IR_DIALECT_H
+#define TRITON_DIALECT_WARP_IR_DIALECT_H
 
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/OpDefinition.h"
 
+#include "mlir-ext/Dialect/CommonIR/IR/CommonIRDialect.h"
 #include "triton/Dialect/Triton/IR/Dialect.h"
 
 #include "mlir-ext/Dialect/WarpIR/IR/WarpIRDialect.h.inc"

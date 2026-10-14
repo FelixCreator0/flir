@@ -2,8 +2,8 @@ set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
 
 # Ops tablegen
 set(LLVM_TARGET_DEFINITIONS WarpIROps.td)
-mlir_tablegen(WarpIRDialect.h.inc -gen-dialect-decls -dialect=tile)
-mlir_tablegen(WarpIRDialect.cpp.inc -gen-dialect-defs -dialect=tile)
+mlir_tablegen(WarpIRDialect.h.inc -gen-dialect-decls -dialect=warp)
+mlir_tablegen(WarpIRDialect.cpp.inc -gen-dialect-defs -dialect=warp)
 mlir_tablegen(WarpIROps.h.inc -gen-op-decls)
 mlir_tablegen(WarpIROps.cpp.inc -gen-op-defs)
 add_mlir_doc(WarpIRDialect WarpIRDialect dialects/ -gen-dialect-doc)
