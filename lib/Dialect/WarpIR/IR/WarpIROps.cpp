@@ -30,3 +30,7 @@ using namespace mlir::triton::warp;
 LogicalResult LoadOp::verify() {
   return success();
 }
+
+LogicalResult StoreOp::verify() {
+  return success();
+}

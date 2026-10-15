@@ -81,4 +81,26 @@ def WarpIR_LoadOp :
   }];
 }
 
+
+//===----------------------------------------------------------------------===//
+// Store
+//===----------------------------------------------------------------------===//
+
+def WarpIR_StoreOp :
+    WarpIR_Op<"store", [MemoryEffects<[MemWrite]>]> {
+
+  let summary = "Cooperative warp-level store";
+
+  let arguments = (ins
+    Warp_RegType:$src,
+    Warp_PtrType:$dst,
+    OptionalAttr<Warp_DistributionAttr>:$layout
+  );
+
+  let assemblyFormat = [{
+    $src `->` $dst attr-dict
+    `:` type($src) `,` type($dst)
+  }];
+}
+
 #endif // WARP_IR_OPS
