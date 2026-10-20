@@ -6,6 +6,8 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "mlir/Transforms/Passes.h"
 #include "triton/Dialect/Triton/IR/Dialect.h"
+#include "triton/Dialect/TritonGPU/IR/Dialect.h"
+#include "mlir-ext/Dialect/CommonIR/IR/CommonIRDialect.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/LogicalResult.h"
 
@@ -21,6 +23,11 @@ namespace warp{
 #define DEBUG_TYPE "commonir-to-warpir-conversion"
 
 namespace {
+using namespace mlir;
+void populateAddWarpConfigsPatterns(RewritePatternSet &patterns,
+                                    TypeConverter &typeConverter){
+
+}
 
 class CommonIRToWarpIRPass
     : public ::mlir::triton::warp::impl::CommonIRToWarpIRBase<CommonIRToWarpIRPass> {
@@ -29,6 +36,16 @@ class CommonIRToWarpIRPass
 
     void runOnOperation() override {
         auto moduleOp = getOperation();
+        mlir::OpBuilder builder(moduleOp);
+        mlir::RewritePatternSet patterns(&getContext());
+        mlir::TypeConverter typeConverter;
+        populateAddWarpConfigsPatterns(patterns, typeConverter);
+
+        if (mlir::failed(mlir::applyPatternsGreedily(
+            moduleOp, std::move(patterns)))) {
+                signalPassFailure();
+                return;
+        }
     }
 };
 
