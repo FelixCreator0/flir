@@ -15,7 +15,6 @@ namespace warp {
 
 void populateAddWarpConfigsPatterns(RewritePatternSet &patterns,
                                     TypeConverter &typeConverter);
-std::unique_ptr<OperationPass<ModuleOp>> createCommonIRToWarpIRPass();
 
 } // namespace warp
 } // namespace triton

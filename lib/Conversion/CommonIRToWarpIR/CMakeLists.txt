@@ -1,5 +1,6 @@
 add_triton_library(CommonIRToWarpIR
   CommonIRToWarpIRPass.cpp
+  InferWarpDistribution.cpp
 
   DEPENDS
   CommonIRToWarpIRConversionPassIncGen

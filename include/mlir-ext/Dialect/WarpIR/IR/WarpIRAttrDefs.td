@@ -40,20 +40,22 @@ def Warp_DistributionAttr :
 
   let parameters = (
     ins
-      "int64_t":$warpSize,
+      OptionalParameter<"int64_t">:$warpSize,
       ArrayRefParameter<"int64_t">:$threadsPerDim,
       ArrayRefParameter<"int64_t">:$elementsPerThread,
-      ArrayRefParameter<"int64_t">:$order
+      ArrayRefParameter<"int64_t">:$order,
+      OptionalParameter<"int64_t">:$numCTAs
   );
 
   let assemblyFormat = [{
-    `<`
-    `warp_size` `=` $warpSize
-    `,` `threads_per_dim` `=` $threadsPerDim
-    `,` `elements_per_thread` `=` $elementsPerThread
-    `,` `order` `=` $order
-    `>`
-  }];
+  `<`
+  `warp_size` `=` $warpSize
+  `,` `threads_per_dim` `=` `[` $threadsPerDim `]`
+  `,` `elements_per_thread` `=` `[` $elementsPerThread `]`
+  `,` `order` `=` `[` $order `]`
+  `,` `num_ctas` `=` $numCTAs
+  `>`
+}];
 }
 
 #endif // WARP_IR_ATTRDEFS

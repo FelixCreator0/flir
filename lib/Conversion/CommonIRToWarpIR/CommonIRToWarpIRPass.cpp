@@ -1,4 +1,5 @@
 #include "mlir-ext/Conversion/CommonIRToWarpIR/Passes.h"
+#include "mlir-ext/Dialect/WarpIR/IR/WarpIRDialect.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
@@ -22,15 +23,17 @@ namespace warp{
 
 #define DEBUG_TYPE "commonir-to-warpir-conversion"
 
-namespace {
-using namespace mlir;
+namespace mlir{
+namespace triton{
+namespace warp{
+
 void populateAddWarpConfigsPatterns(RewritePatternSet &patterns,
                                     TypeConverter &typeConverter){
 
 }
 
 class CommonIRToWarpIRPass
-    : public ::mlir::triton::warp::impl::CommonIRToWarpIRBase<CommonIRToWarpIRPass> {
+    : public impl::CommonIRToWarpIRBase<CommonIRToWarpIRPass> {
   using CommonIRToWarpIRBase<
       CommonIRToWarpIRPass>::CommonIRToWarpIRBase;
 
@@ -39,6 +42,11 @@ class CommonIRToWarpIRPass
         mlir::OpBuilder builder(moduleOp);
         mlir::RewritePatternSet patterns(&getContext());
         mlir::TypeConverter typeConverter;
+        MLIRContext *ctx = &getContext();
+        auto shape = SmallVector<int64_t>{16, 32};
+        auto warpDistribution = inferDistribution(ctx, shape, numWarps, threadsPerWarp);
+
+        llvm::errs() << "Distribution: " << warpDistribution << "\n";
         populateAddWarpConfigsPatterns(patterns, typeConverter);
 
         if (mlir::failed(mlir::applyPatternsGreedily(
@@ -49,4 +57,7 @@ class CommonIRToWarpIRPass
     }
 };
 
-}
+
+} // namespace warp
+} // namespace triton
+} // namespace mlir

@@ -2,6 +2,7 @@
 #define COMMON_IR_TO_WARP_IR_CONVERSION_PASSES_H
 
 #include "mlir-ext/Conversion/CommonIRToWarpIR/CommonIRToWarpIR.h"
+#include "mlir-ext/Conversion/CommonIRToWarpIR/InferWarpDistribution.h"
 
 namespace mlir {
 namespace triton {
