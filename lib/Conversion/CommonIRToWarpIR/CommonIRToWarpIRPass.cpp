@@ -27,11 +27,6 @@ namespace mlir{
 namespace triton{
 namespace warp{
 
-void populateAddWarpConfigsPatterns(RewritePatternSet &patterns,
-                                    TypeConverter &typeConverter){
-
-}
-
 class CommonIRToWarpIRPass
     : public impl::CommonIRToWarpIRBase<CommonIRToWarpIRPass> {
   using CommonIRToWarpIRBase<
@@ -39,20 +34,22 @@ class CommonIRToWarpIRPass
 
     void runOnOperation() override {
         auto moduleOp = getOperation();
-        mlir::OpBuilder builder(moduleOp);
         mlir::RewritePatternSet patterns(&getContext());
         mlir::TypeConverter typeConverter;
-        MLIRContext *ctx = &getContext();
-        auto shape = SmallVector<int64_t>{16, 32};
-        auto warpDistribution = inferDistribution(ctx, shape, numWarps, threadsPerWarp);
 
-        llvm::errs() << "Distribution: " << warpDistribution << "\n";
-        populateAddWarpConfigsPatterns(patterns, typeConverter);
+        populateTritonPatterns(patterns, typeConverter);    
+        populateCommonIRPatterns(patterns, typeConverter);
 
-        if (mlir::failed(mlir::applyPatternsGreedily(
-            moduleOp, std::move(patterns)))) {
-                signalPassFailure();
-                return;
+        ConversionTarget target(*moduleOp.getContext());
+
+        target.addLegalOp<ModuleOp>();
+        target.addLegalDialect<mlir::triton::warp::WarpIRDialect>();
+        target.addLegalDialect<mlir::triton::TritonDialect>();
+
+        if (failed(applyPartialConversion(
+                moduleOp, target, std::move(patterns)))) {
+            signalPassFailure();
+            return;
         }
     }
 };

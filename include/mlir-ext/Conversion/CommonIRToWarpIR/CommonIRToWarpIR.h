@@ -13,8 +13,11 @@ namespace warp {
 #define GEN_PASS_DECL
 #include "mlir-ext/Conversion/CommonIRToWarpIR/Passes.h.inc"
 
-void populateAddWarpConfigsPatterns(RewritePatternSet &patterns,
-                                    TypeConverter &typeConverter);
+void populateCommonIRPatterns(RewritePatternSet &patterns,
+                              TypeConverter &typeConverter);
+
+void populateTritonPatterns(RewritePatternSet &patterns,
+                            TypeConverter &typeConverter);
 
 } // namespace warp
 } // namespace triton
