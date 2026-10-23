@@ -1,4 +1,5 @@
 #include "mlir-ext/Conversion/CommonIRToWarpIR/Passes.h"
+#include "mlir-ext/Conversion/CommonIRToWarpIR/WarpTypeConverter.h"
 #include "mlir-ext/Dialect/WarpIR/IR/WarpIRDialect.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/Pass/Pass.h"
@@ -27,6 +28,14 @@ namespace mlir{
 namespace triton{
 namespace warp{
 
+
+inline void setLegalityForTarget(ConversionTarget &target) {
+    target.addLegalDialect<
+        mlir::triton::warp::WarpIRDialect, mlir::triton::TritonDialect>();
+    target.addLegalOp<ModuleOp>();
+    target.addIllegalOp<mlir::triton::LoadOp>();
+}
+
 class CommonIRToWarpIRPass
     : public impl::CommonIRToWarpIRBase<CommonIRToWarpIRPass> {
   using CommonIRToWarpIRBase<
@@ -35,21 +44,15 @@ class CommonIRToWarpIRPass
     void runOnOperation() override {
         auto moduleOp = getOperation();
         mlir::RewritePatternSet patterns(&getContext());
-        mlir::TypeConverter typeConverter;
+        ConversionTarget target(*moduleOp.getContext());
+        WarpTypeConverter typeConverter(&getContext(), numWarps, threadsPerWarp, numCTAs);
 
         populateTritonPatterns(patterns, typeConverter);    
         populateCommonIRPatterns(patterns, typeConverter);
+        setLegalityForTarget(target);
 
-        ConversionTarget target(*moduleOp.getContext());
-
-        target.addLegalOp<ModuleOp>();
-        target.addLegalDialect<mlir::triton::warp::WarpIRDialect>();
-        target.addLegalDialect<mlir::triton::TritonDialect>();
-
-        if (failed(applyPartialConversion(
-                moduleOp, target, std::move(patterns)))) {
-            signalPassFailure();
-            return;
+        if (failed(applyPartialConversion(moduleOp, target, std::move(patterns)))) {
+            return signalPassFailure();
         }
     }
 };

@@ -35,7 +35,7 @@ class WarpIR_Type<string name, string typeMnemonic, list<Trait> traits = []>
 // !warp.reg
 //===----------------------------------------------------------------------===//
 
-def Warp_RegType : WarpIR_Type<"RegType", "reg"> {
+def Warp_RegType : WarpIR_Type<"Reg", "reg"> {
   let summary = "A warp-distributed register fragment";
 
   let parameters = (ins
@@ -53,7 +53,7 @@ def Warp_RegType : WarpIR_Type<"RegType", "reg"> {
 // !warp.ptr
 //===----------------------------------------------------------------------===//
 
-def Warp_PtrType : WarpIR_Type<"PtrType", "ptr"> {
+def Warp_PtrType : WarpIR_Type<"Ptr", "ptr"> {
   let summary = "A pointer used by warp-level memory operations";
 
   let parameters = (ins

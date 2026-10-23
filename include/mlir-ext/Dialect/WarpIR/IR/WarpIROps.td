@@ -50,7 +50,7 @@ def WarpIR_LoadOp :
   let description = [{
     Loads a tensor cooperatively across all lanes of a warp.
 
-    Unlike tile.load, the operation explicitly describes the distribution
+    Unlike tt.load, the operation explicitly describes the distribution
     of the loaded elements among warp lanes.
 
     Example:
@@ -66,10 +66,7 @@ def WarpIR_LoadOp :
   }];
 
   let arguments = (ins
-    Warp_PtrType:$src,
-    OptionalAttr<Warp_DistributionAttr>:$layout,
-    OptionalAttr<I64ArrayAttr>:$shape,
-    OptionalAttr<I64ArrayAttr>:$strides
+    Warp_PtrType:$src
   );
 
   let results = (outs

@@ -5,7 +5,7 @@ using namespace llvm;
         /* num_warps -> (threadsPerDim, elementsPerThread, order)*/
 DistributionAttr inferDistribution(
     mlir::MLIRContext *ctx,
-    const SmallVector<int64_t> &shape,
+    const llvm::ArrayRef<int64_t> shape,
     int64_t numWarps,
     int64_t warpSize){
     
