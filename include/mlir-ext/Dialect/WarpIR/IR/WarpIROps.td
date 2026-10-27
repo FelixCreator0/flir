@@ -22,6 +22,10 @@ include "mlir/Interfaces/InferTypeOpInterface.td"
 
 include "triton/Dialect/Triton/IR/TritonTypes.td"
 include "triton/Dialect/Triton/IR/TritonInterfaces.td"
+include "triton/Dialect/Triton/IR/TritonAttrDefs.td"
+include "triton/Dialect/Triton/IR/TritonOpInterfaces.td"
+
+
 
 include "mlir-ext/Dialect/WarpIR/IR/WarpIRDialect.td"
 include "mlir-ext/Dialect/WarpIR/IR/WarpIRAttrDefs.td"
@@ -43,7 +47,7 @@ class WarpIR_Op<string mnemonic, list<Trait> traits = []> :
 
 
 def WarpIR_LoadOp :
-    WarpIR_Op<"load", [MemoryEffects<[MemRead]>]> {
+    WarpIR_Op<"load", [MemoryEffects<[MemRead]>,AttrSizedOperandSegments]> {
 
   let summary = "Cooperative warp-level load";
 
@@ -52,30 +56,27 @@ def WarpIR_LoadOp :
 
     Unlike tt.load, the operation explicitly describes the distribution
     of the loaded elements among warp lanes.
-
-    Example:
-
-      %a = warp.load %ptr {
-        layout = #warp.distributed<
-          warp_size = 32,
-          threads_per_dim = [8,4],
-          elements_per_thread = [2,2],
-          order = [1,0]>
-      } : !warp.ptr<f16,#warp.global>
-          -> !warp.reg<[16,16],f16,#warp.distributed<...>>
   }];
 
   let arguments = (ins
-    Warp_PtrType:$src
+    AnyTypeOf<[TT_PtrLike, TT_TensorPtr]>:$ptr,
+    Optional<TT_BoolLike>:$mask,
+    Optional<TT_Type>:$other,
+
+    DefaultValuedAttr<DenseI32ArrayAttr, "::llvm::ArrayRef<int32_t>{}">:$boundaryCheck,
+    OptionalAttr<TT_PaddingOptionAttr>:$padding,
+    DefaultValuedAttr<TT_CacheModifierAttr, "::mlir::triton::CacheModifier::NONE">:$cache,
+    DefaultValuedAttr<TT_EvictionPolicyAttr, "::mlir::triton::EvictionPolicy::NORMAL">:$evict,
+    DefaultValuedAttr<BoolAttr, "false">:$isVolatile,
+    // begin flagtree tle
+    DefaultValuedAttr<StrAttr, "\"\"">:$flagtree_hints
+    // end flagtree tle
   );
 
   let results = (outs
-    Warp_RegType:$result
+    TT_Type:$result
   );
 
-  let assemblyFormat = [{
-    $src attr-dict `:` type($src) `->` type($result)
-  }];
 }
 
 
@@ -98,6 +99,15 @@ def WarpIR_StoreOp :
     $src `->` $dst attr-dict
     `:` type($src) `,` type($dst)
   }];
+}
+
+def Warp_RegToTensorOp : WarpIR_Op<"reg_to_tensor"> {
+  let summary = "Convert a WarpIR register value to a tensor value";
+
+  let arguments = (ins Warp_RegType:$input);
+  let results = (outs AnyRankedTensor:$result);
+
+  let assemblyFormat = "$input attr-dict `:` type($input) `to` type($result)";
 }
 
 #endif // WARP_IR_OPS

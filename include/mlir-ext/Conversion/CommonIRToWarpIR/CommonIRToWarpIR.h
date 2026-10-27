@@ -17,7 +17,8 @@ void populateCommonIRPatterns(RewritePatternSet &patterns,
                               TypeConverter &typeConverter);
 
 void populateTritonPatterns(RewritePatternSet &patterns,
-                            TypeConverter &typeConverter);
+                            TypeConverter &typeConverter, int numWarps,
+                            int threadsPerWarp, int numCTAs);
 
 } // namespace warp
 } // namespace triton

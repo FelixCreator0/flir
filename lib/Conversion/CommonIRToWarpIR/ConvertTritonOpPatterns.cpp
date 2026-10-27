@@ -12,30 +12,54 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/LogicalResult.h"
 
+
+// namespace {
+// using namespace mlir;
+// using namespace llvm;
+// template <typename OpT>
+// SmallVector<NamedAttribute> getTritonAttrs(OpT op) const {
+//   SmallVector<NamedAttribute> attrs;
+//   for (NamedAttribute attr : op->getAttrs()) {
+//     if (attr.getName() == OpT::getOperandSegmentSizesAttrName(op->getName()))
+//       continue;
+//     attrs.push_back(attr);
+//   }
+//   return attrs;
+// }
+
+// } // namespace
+
 namespace mlir {
 namespace triton {
 namespace warp {
 
 using namespace mlir::triton;
 
-class AddFOpConversionPattern : public OpConversionPattern<arith::AddFOp>{
-  using OpConversionPattern::OpConversionPattern;
-
-  LogicalResult
-  matchAndRewrite(arith::AddFOp op, OpAdaptor adaptor,
-                  ConversionPatternRewriter &rewriter) const override {
-        return success();
-}
-};
-
 class LoadOpConversionPattern : public OpConversionPattern<triton::LoadOp> {
   using OpConversionPattern::OpConversionPattern;
+  public:
+  int numWarps;
+  int threadsPerWarp;
+  int numCTAs;
+ 
+  LoadOpConversionPattern(TypeConverter &typeConverter, MLIRContext *context, int numWarps, int threadsPerWarp, int numCTAs)
+      : OpConversionPattern<triton::LoadOp>(typeConverter, context), 
+        numWarps(numWarps), threadsPerWarp(threadsPerWarp), numCTAs(numCTAs) {}
+  
+  SmallVector<NamedAttribute> getTritonAttrs(triton::LoadOp op) const{
+    SmallVector<NamedAttribute> attrs;
+    for (NamedAttribute attr : op->getAttrs()) {
+      if (attr.getName() == op.getOperandSegmentSizesAttrName())
+        continue;
+      attrs.push_back(attr);
+    }
+    return attrs;
+  }
 
   LogicalResult
   matchAndRewrite(triton::LoadOp op, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     auto loc = op.getLoc(); 
-    auto src = op.getPtr();
     auto tensorType = mlir::dyn_cast<RankedTensorType>(op.getType());
     mlir::Type pointeeType = tensorType.getElementType();
     auto shape = tensorType.getShape();
@@ -48,8 +72,8 @@ class LoadOpConversionPattern : public OpConversionPattern<triton::LoadOp> {
     auto layout = inferDistribution(
         rewriter.getContext(),
         shape,
-        /*numWarps*/4,
-        /*warpSize*/32
+        numWarps,
+        threadsPerWarp
     );
     auto resultType = warp::RegType::get(
         rewriter.getContext(),
@@ -60,7 +84,8 @@ class LoadOpConversionPattern : public OpConversionPattern<triton::LoadOp> {
     auto newOp = rewriter.create<warp::LoadOp>(
         loc,
         resultType,
-        adaptor.getPtr()
+        adaptor.getPtr(),
+        getTritonAttrs(op)
     );
         
     rewriter.replaceOp(op, newOp.getResult());
@@ -69,11 +94,11 @@ class LoadOpConversionPattern : public OpConversionPattern<triton::LoadOp> {
 };
 
 void populateTritonPatterns(RewritePatternSet &patterns,
-                                    TypeConverter &typeConverter){
+                            TypeConverter &typeConverter, 
+                            int numWarps, int threadsPerWarp, int numCTAs){
     MLIRContext *context = patterns.getContext();
-    patterns.add<LoadOpConversionPattern, AddFOpConversionPattern>(typeConverter, context);
+    patterns.add<LoadOpConversionPattern>(typeConverter, context, numWarps, threadsPerWarp, numCTAs);
 }
-
 } // namespace warp
 } // namespace triton
 } // namespace mlir

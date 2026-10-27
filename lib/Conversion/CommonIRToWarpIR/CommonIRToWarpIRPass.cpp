@@ -47,7 +47,7 @@ class CommonIRToWarpIRPass
         ConversionTarget target(*moduleOp.getContext());
         WarpTypeConverter typeConverter(&getContext(), numWarps, threadsPerWarp, numCTAs);
 
-        populateTritonPatterns(patterns, typeConverter);    
+        populateTritonPatterns(patterns, typeConverter, numWarps, threadsPerWarp, numCTAs);    
         populateCommonIRPatterns(patterns, typeConverter);
         setLegalityForTarget(target);
 

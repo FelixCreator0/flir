@@ -33,29 +33,32 @@ class WarpIR_Attr<string name, string attrMnemonic, list<Trait> traits = []>
 //===----------------------------------------------------------------------===//
 // Warp distribution
 //===----------------------------------------------------------------------===//
+def Warp_DistributionAttr : WarpIR_Attr<"Distribution", "distributed"> {
+  let summary = "Lane distribution of a warp-local tensor";
+  let description = [{
+    shape[d] == threadsPerDim[d] * elementsPerThread[d] * repeat[d]
+    elementsPerThread[order[0]] contiguous elements are adjacent in memory
+    (vectorizable).
+  }];
 
-def Warp_DistributionAttr :
-    AttrDef<WarpIR_Dialect, "Distribution"> {
-  let mnemonic = "distributed";
-
-  let parameters = (
-    ins
-      OptionalParameter<"int64_t">:$warpSize,
-      ArrayRefParameter<"int64_t">:$threadsPerDim,
-      ArrayRefParameter<"int64_t">:$elementsPerThread,
-      ArrayRefParameter<"int64_t">:$order,
-      OptionalParameter<"int64_t">:$numCTAs
+  let parameters = (ins
+    DefaultValuedParameter<"int64_t", "32">:$warpSize,
+    ArrayRefParameter<"int64_t">:$threadsPerDim,
+    ArrayRefParameter<"int64_t">:$elementsPerThread,
+    ArrayRefParameter<"int64_t">:$repeat,
+    ArrayRefParameter<"int64_t">:$order
   );
 
   let assemblyFormat = [{
-  `<`
-  `warp_size` `=` $warpSize
-  `,` `threads_per_dim` `=` `[` $threadsPerDim `]`
-  `,` `elements_per_thread` `=` `[` $elementsPerThread `]`
-  `,` `order` `=` `[` $order `]`
-  `,` `num_ctas` `=` $numCTAs
-  `>`
-}];
-}
+    `<` `{`
+      `warp_size` `=` $warpSize `,`
+      `threads_per_dim` `=` $threadsPerDim `,`
+      `elements_per_thread` `=` $elementsPerThread `,`
+      `repeat` `=` $repeat `,`
+      `order` `=` $order
+    `}` `>`
+  }];
 
+  let genVerifyDecl = 1;
+}
 #endif // WARP_IR_ATTRDEFS
