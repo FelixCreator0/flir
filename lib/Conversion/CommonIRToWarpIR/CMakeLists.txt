@@ -3,6 +3,7 @@ add_triton_library(CommonIRToWarpIR
   InferWarpDistribution.cpp
   ConvertCommonIROpPatterns.cpp
   ConvertTritonOpPatterns.cpp
+  GenericOpConversion.cpp
   WarpTypeConverter.cpp
 
   DEPENDS

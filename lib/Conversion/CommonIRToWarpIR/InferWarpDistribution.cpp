@@ -23,7 +23,7 @@ static DistributionAttr getDefaultWarpLayout(MLIRContext *ctx,
     repeat[d] /= t;
     remaining /= t;
   }
-  if (remaining != 1)            // tile 太小,v1 不支持 lane 复制
+  if (remaining != 1)
     return {};
   return DistributionAttr::get(ctx, warpSize, threads, elems, repeat, order);
 }
@@ -35,18 +35,6 @@ DistributionAttr inferDistribution(
     int64_t warpSize){
     
     return getDefaultWarpLayout(ctx, shape, warpSize);
-    
-//     auto threadsPerDim = SmallVector<int64_t>{4, 8};
-//     auto elementsPerThread = SmallVector<int64_t>{1, 4};
-//     auto order = SmallVector<int64_t>{0, 1};
-//     auto repeat = SmallVector<int64_t>{2, 1};
-//     return DistributionAttr::get(
-//             ctx,
-//             /*warpSize*/warpSize,
-//             /*threadsPerDim*/threadsPerDim,
-//             /*elementsPerThread*/elementsPerThread,
-//             /*repeat*/repeat,
-//             /*order*/order);
 
 }
 

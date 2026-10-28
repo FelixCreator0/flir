@@ -29,11 +29,25 @@ namespace triton{
 namespace warp{
 
 
-inline void setLegalityForTarget(ConversionTarget &target) {
+inline void setLegalityForTarget(ConversionTarget &target, const WarpTypeConverter &tc) {
     target.addLegalDialect<
-        mlir::triton::warp::WarpIRDialect, mlir::triton::TritonDialect>();
+        mlir::triton::warp::WarpIRDialect>();
     target.addLegalOp<ModuleOp>();
-    target.addIllegalOp<mlir::triton::LoadOp>();
+    target.addDynamicallyLegalDialect<mlir::triton::TritonDialect,
+                                    arith::ArithDialect,
+                                    math::MathDialect>(
+      [&tc](Operation *op) { return tc.isLegal(op); });
+
+    target.addDynamicallyLegalOp<mlir::triton::FuncOp>(
+      [&tc](mlir::triton::FuncOp f) {
+        return tc.isSignatureLegal(f.getFunctionType()) &&
+               tc.isLegal(&f.getBody());
+      });
+
+    target.addDynamicallyLegalOp<mlir::triton::LoadOp>(
+      [](mlir::triton::LoadOp op) {
+        return !isa<RankedTensorType>(op.getType());
+      });
 }
 
 class CommonIRToWarpIRPass
@@ -48,8 +62,9 @@ class CommonIRToWarpIRPass
         WarpTypeConverter typeConverter(&getContext(), numWarps, threadsPerWarp, numCTAs);
 
         populateTritonPatterns(patterns, typeConverter, numWarps, threadsPerWarp, numCTAs);    
+        populateGenericPatterns(patterns, typeConverter);
         populateCommonIRPatterns(patterns, typeConverter);
-        setLegalityForTarget(target);
+        setLegalityForTarget(target, typeConverter);
 
         if (failed(applyPartialConversion(moduleOp, target, std::move(patterns)))) {
             return signalPassFailure();

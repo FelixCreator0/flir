@@ -12,28 +12,12 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/LogicalResult.h"
 
-
-// namespace {
-// using namespace mlir;
-// using namespace llvm;
-// template <typename OpT>
-// SmallVector<NamedAttribute> getTritonAttrs(OpT op) const {
-//   SmallVector<NamedAttribute> attrs;
-//   for (NamedAttribute attr : op->getAttrs()) {
-//     if (attr.getName() == OpT::getOperandSegmentSizesAttrName(op->getName()))
-//       continue;
-//     attrs.push_back(attr);
-//   }
-//   return attrs;
-// }
-
-// } // namespace
-
 namespace mlir {
 namespace triton {
 namespace warp {
 
 using namespace mlir::triton;
+
 
 class LoadOpConversionPattern : public OpConversionPattern<triton::LoadOp> {
   using OpConversionPattern::OpConversionPattern;
@@ -46,49 +30,22 @@ class LoadOpConversionPattern : public OpConversionPattern<triton::LoadOp> {
       : OpConversionPattern<triton::LoadOp>(typeConverter, context), 
         numWarps(numWarps), threadsPerWarp(threadsPerWarp), numCTAs(numCTAs) {}
   
-  SmallVector<NamedAttribute> getTritonAttrs(triton::LoadOp op) const{
-    SmallVector<NamedAttribute> attrs;
-    for (NamedAttribute attr : op->getAttrs()) {
-      if (attr.getName() == op.getOperandSegmentSizesAttrName())
-        continue;
-      attrs.push_back(attr);
-    }
-    return attrs;
-  }
-
   LogicalResult
   matchAndRewrite(triton::LoadOp op, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    auto loc = op.getLoc(); 
-    auto tensorType = mlir::dyn_cast<RankedTensorType>(op.getType());
-    mlir::Type pointeeType = tensorType.getElementType();
-    auto shape = tensorType.getShape();
-    mlir::SmallVector<mlir::Attribute> shapeElements;
-    for (int64_t dim : shape) {
-    shapeElements.push_back(
-        rewriter.getI64IntegerAttr(dim));
-    }
-    auto shapeAttr = rewriter.getArrayAttr(shapeElements);
-    auto layout = inferDistribution(
-        rewriter.getContext(),
-        shape,
-        numWarps,
-        threadsPerWarp
-    );
-    auto resultType = warp::RegType::get(
-        rewriter.getContext(),
-        shape,
-        pointeeType,
-        layout
-    );
+
+    auto resultTy = getTypeConverter()->convertType(op.getResult().getType());
+    auto tensorTy = dyn_cast<RankedTensorType>(op.getResult().getType());
+    auto enc = inferDistribution(this->getContext(), tensorTy.getShape(), this->numWarps, this->threadsPerWarp);
     auto newOp = rewriter.create<warp::LoadOp>(
-        loc,
-        resultType,
-        adaptor.getPtr(),
-        getTritonAttrs(op)
+        op.getLoc(), TypeRange{resultTy}, 
+        adaptor.getPtr(), adaptor.getMask(), adaptor.getOther(),
+        op.getBoundaryCheckAttr(), op.getPaddingAttr(), op.getCacheAttr(),
+        op.getEvictAttr(), op.getIsVolatileAttr(), op.getFlagtreeHintsAttr(), enc
     );
-        
-    rewriter.replaceOp(op, newOp.getResult());
+
+    newOp->setDiscardableAttrs(op->getDiscardableAttrDictionary());
+    rewriter.replaceOp(op, newOp->getResults());
     return success();
 }
 };

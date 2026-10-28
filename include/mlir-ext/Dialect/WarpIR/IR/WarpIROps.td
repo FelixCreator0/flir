@@ -69,8 +69,10 @@ def WarpIR_LoadOp :
     DefaultValuedAttr<TT_EvictionPolicyAttr, "::mlir::triton::EvictionPolicy::NORMAL">:$evict,
     DefaultValuedAttr<BoolAttr, "false">:$isVolatile,
     // begin flagtree tle
-    DefaultValuedAttr<StrAttr, "\"\"">:$flagtree_hints
+    DefaultValuedAttr<StrAttr, "\"\"">:$flagtree_hints,
     // end flagtree tle
+    Warp_DistributionAttr:$distribution
+
   );
 
   let results = (outs

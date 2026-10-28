@@ -23,11 +23,26 @@
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/SourceMgr.h"
+#include "mlir/IR/OpImplementation.h"
 
 using namespace mlir;
 using namespace mlir::triton::warp;
 
+namespace {
+struct WarpOpAsmInterface : public OpAsmDialectInterface {
+  using OpAsmDialectInterface::OpAsmDialectInterface;
+
+  AliasResult getAlias(Attribute attr, raw_ostream &os) const override {
+    if (isa<mlir::triton::warp::DistributionAttr>(attr)) {
+      os << "warp_dist";          // 自动加后缀编号:#warp_dist, #warp_dist1, ...
+      return AliasResult::FinalAlias;
+    }
+    return AliasResult::NoAlias;
+  }
+};
+} // namespace
 void WarpIRDialect::initialize() {
+  addInterfaces<WarpOpAsmInterface>();
   addOperations<
 #define GET_OP_LIST
 #include "mlir-ext/Dialect/WarpIR/IR/WarpIROps.cpp.inc"
