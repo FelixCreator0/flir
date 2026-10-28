@@ -1,5 +1,6 @@
 add_triton_library(CommonIRTransforms
   InferLayout.cpp
+  LaneVectorize.cpp
 
   DEPENDS
   CommonIRTransformsPassIncGen
@@ -8,4 +9,9 @@ add_triton_library(CommonIRTransforms
   MLIRIR
   MLIRPass
   CommonIRIR
+  MLIRTransformUtils
+  MLIRTransforms
+  MLIRSCFToControlFlow
+  MLIRTensorDialect
+  TritonIR
 )
