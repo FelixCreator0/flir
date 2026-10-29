@@ -27,10 +27,14 @@ WarpTypeConverter::WarpTypeConverter(MLIRContext *context,
   addConversion([this](RankedTensorType t) -> Type {           
       if (t.getEncoding() || t.getRank() == 0)
         return t;
-      auto enc = inferDistribution(this->context, t.getShape(), this->numWarps, this->threadsPerWarp);
-      if (!enc)
+      auto warpLayout = inferDistribution(this->context, t.getShape(), this->numWarps, this->threadsPerWarp);
+      auto _prod = this -> threadsPerWarp;
+      for (auto e : warpLayout.getElementsPerThread())
+        _prod *= e;
+
+      if (!warpLayout)
         return Type();                                      
-      return RankedTensorType::get(t.getShape(), t.getElementType(), enc);
+      return RankedTensorType::get(_prod, t.getElementType(), warpLayout);
     });
 
 }

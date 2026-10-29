@@ -37,7 +37,7 @@ void populateGenericTritonPatterns(RewritePatternSet &patterns, TypeConverter &t
       GenericOpPattern<triton::ElementwiseInlineAsmOp>,
       GenericOpPattern<triton::ReduceReturnOp>,
       GenericOpPattern<triton::ScanReturnOp>,
-      GenericOpPattern<triton::MakeRangeOp>,
+      //GenericOpPattern<triton::MakeRangeOp>,
 #ifdef __TLE__
       GenericOpPattern<triton::gpu::LocalAllocOp>,
       GenericOpPattern<triton::gpu::LocalStoreOp>,

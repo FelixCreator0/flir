@@ -8,7 +8,7 @@ static DistributionAttr getDefaultWarpLayout(MLIRContext *ctx,
   int rank = shape.size();
   SmallVector<int64_t> order(rank), threads(rank, 1), elems(rank, 1),
       repeat(shape.begin(), shape.end());
-  for (int i = 0; i < rank; ++i) order[i] = rank - 1 - i;   // 最快维在前
+  for (int i = 0; i < rank; ++i) order[i] = rank - 1 - i;  
 
   int64_t fast = order[0];
   if (shape[fast] % 4 == 0) {

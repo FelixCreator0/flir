@@ -24,10 +24,25 @@ include "mlir/IR/EnumAttr.td"
 // Attribute base class
 //===----------------------------------------------------------------------===//
 
+
+
 class WarpIR_Attr<string name, string attrMnemonic, list<Trait> traits = []>
     : AttrDef<WarpIR_Dialect, name, traits> {
   let mnemonic = attrMnemonic;
 }
+
+def Warp_MmaOperand : I32EnumAttr<"MmaOperand", "MMA operand role", [
+  I32EnumAttrCase<"A", 0, "a">,
+  I32EnumAttrCase<"B", 1, "b">,
+  I32EnumAttrCase<"C", 2, "c">   
+]> { let cppNamespace = "::mlir::triton::warp"; let genSpecializedAttr = 0; }
+
+def Warp_MmaKind : I32EnumAttr<"MmaKind", "warp-level MMA instruction family", [
+  I32EnumAttrCase<"NvMmaSync",    0, "nv_mma_sync">,    // Ampere/Ada mma.sync
+  I32EnumAttrCase<"NvWgmmaSlice", 1, "nv_wgmma_slice">, // Hopper wgmma 
+  I32EnumAttrCase<"AmdMfma",      2, "amd_mfma">,       // wave64
+  I32EnumAttrCase<"AmdWmma",      3, "amd_wmma">
+]> { let cppNamespace = "::mlir::triton::warp"; let genSpecializedAttr = 0; }
 
 
 //===----------------------------------------------------------------------===//
@@ -60,5 +75,37 @@ def Warp_DistributionAttr : WarpIR_Attr<"Distribution", "distributed"> {
   }];
 
   let genVerifyDecl = 1;
+}
+
+
+def Warp_MmaAttr : WarpIR_Attr<"Mma", "mma"> {
+  let summary = "Warp-local register fragment of an MMA operand";
+  let parameters = (ins
+    EnumParameter<Warp_MmaKind>:$kind,
+    ArrayRefParameter<"int64_t">:$instrShape,   // [m, n, k]
+    EnumParameter<Warp_MmaOperand>:$operand,
+    "int64_t":$elemBitWidth,   
+    ArrayRefParameter<"int64_t">:$repeat,     
+    ArrayRefParameter<"int64_t">:$repeatOrder,
+    DefaultValuedParameter<"int64_t", "32">:$warpSize
+  );
+
+  let assemblyFormat = [{
+    `<` `kind` `=` $kind `,` `instr` `=` `[` $instrShape `]` `,`
+        `operand` `=` $operand `,` `bits` `=` $elemBitWidth `,`
+        `repeat` `=` `[` $repeat `]` `,` `repeatOrder` `=` `[` $repeatOrder `]`
+        (`,` `warpSize` `=` $warpSize^)? `>`
+  }];
+
+  let genVerifyDecl = 1;
+
+  let extraClassDeclaration = [{
+    SmallVector<int64_t> getTileShape() const;       // 单条指令覆盖的逻辑 tile
+    int64_t getElemsPerLaneInInstr() const;
+    int64_t getElemsPerReg() const { return 32 / getElemBitWidth(); }
+    // WarpLayoutInterface
+    int64_t getRegsPerLane(ArrayRef<int64_t> shape) const;
+    // LinearLayout toLinearLayout(ArrayRef<int64_t> shape) const;
+  }];
 }
 #endif // WARP_IR_ATTRDEFS

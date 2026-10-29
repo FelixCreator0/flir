@@ -73,3 +73,15 @@ LogicalResult DistributionAttr::verify(
   }
   return success();
 }
+
+LogicalResult MmaAttr::verify(
+    llvm::function_ref<mlir::InFlightDiagnostic()> emitError,
+    MmaKind kind,
+    llvm::ArrayRef<int64_t> instrShape,
+    MmaOperand operand,
+    int64_t elemBitWidth,
+    llvm::ArrayRef<int64_t> repeat,
+    llvm::ArrayRef<int64_t> repeatOrder,
+    int64_t warpSize) {
+    return success();
+}
